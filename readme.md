@@ -39,6 +39,20 @@
 </web-app>
 ```
 
+自定义的 
+```xml
+   <servlet>
+        <servlet-name>spring</servlet-name>
+        <servlet-class>com.mymvcframework.v2.servlet.CLDispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:application.properties</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+```
+
 
 ### spring-context.xml
 ```xml
