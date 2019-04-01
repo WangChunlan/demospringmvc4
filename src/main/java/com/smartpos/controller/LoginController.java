@@ -13,7 +13,7 @@ public class LoginController {
     @CLAutowired
     private LoginService loginService;
 
-    @CLResponseBody
+ /*   @CLResponseBody
     @CLRequestMapping("/in")
     public String in(String name) {
         System.out.println(name);
@@ -22,20 +22,18 @@ public class LoginController {
     }
     @CLResponseBody
     @CLRequestMapping("/in2")
-    public String in2(HttpServletRequest request, HttpServletResponse response,
-                      @CLRequestParam String name) {
-        System.out.println(name);
+    public String in2(@CLRequestParam("name") String name) {
+        System.out.println("进入了 login/in2 方法中  "+name);
         return " this is in2 :name="+name;
 
-    }
+    }*/
 
     @CLRequestMapping("/in3")
     public void in3(HttpServletRequest request, HttpServletResponse response,
                       @CLRequestParam String name) {
-        System.out.println(name);
-
+        System.out.println("进入了 login/in3 方法中 :"+name);
         try {
-            response.getWriter().write("this is in3. name is "+name);
+            response.getWriter().write("成功了   this is in3. name is "+name);
         } catch (IOException e) {
             e.printStackTrace();
         }

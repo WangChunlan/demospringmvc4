@@ -25,7 +25,7 @@ public class CLDispatcherServlet extends HttpServlet {
     private Map<String, Object> ioc = new HashMap<>();
 
     // 保存url 和methods 对应关系
-    private Map<String,Method> handlerMapping=new HashMap<String ,Method>();
+    private Map<String, Method> handlerMapping = new HashMap<String, Method>();
 
     // 重写三个方法
 
@@ -45,7 +45,7 @@ public class CLDispatcherServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // 6. 调用，运行阶段
         try {
-            doDispatch(req,resp);
+            doDispatch(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
             resp.getWriter().write("500 Exection,Detail : " + Arrays.toString(e.getStackTrace()));
@@ -54,42 +54,111 @@ public class CLDispatcherServlet extends HttpServlet {
     }
 
     private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws IOException, InvocationTargetException, IllegalAccessException {
-    // 绝对路径
-        String url=req.getRequestURI();
+        // 绝对路径
+        String url = req.getRequestURI();
         // 处理成相对路径
-        String contextPath=req.getContextPath();
-     url=   url.replaceAll(contextPath,"").replaceAll("/+","");
-
-     if(this.handlerMapping.containsKey(url)){
-         resp.getWriter().write("404 not found!!!");
-         return;
-
-     }
+        String contextPath = req.getContextPath();
+        url = url.replaceAll(contextPath, "").replaceAll("/+", "/");  // todo :修改错误
+        if (!this.handlerMapping.containsKey(url)) {  // todo :修改错误
+            resp.getWriter().write("404 not found!!!");
+            return;
+        }
 
 
-     Method method=this.handlerMapping.get(url);
+        Method method = this.handlerMapping.get(url);
+        System.out.println("获得对应的方法" + url);
 
-     // 从 request 中拿到 url 传过来的参数
-        Map<String,String[]> params=req.getParameterMap();
+        // 从 request 中拿到 url 传过来的参数
+        Map<String, String[]> params = req.getParameterMap();
         // 获取方法的形参列表
-        Class<?>[] parameterTypes=method.getParameterTypes();
-        Object [] paramVales=new Object[parameterTypes.length];
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object[] paramVales = new Object[parameterTypes.length];
 
-        for(int i=0;i<parameterTypes.length;i++){
-            Class parameterType=parameterTypes[i];
-            if(parameterType==HttpServletRequest.class){
-                paramVales[i]=req;
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class parameterType = parameterTypes[i];
+            if (parameterType == HttpServletRequest.class) {
+                paramVales[i] = req;
                 continue;
-            }else if(parameterType==HttpServletResponse.class){
-                paramVales[i]=resp;
+            } else if (parameterType == HttpServletResponse.class) {
+                paramVales[i] = resp;
                 continue;
-            }else if (parameterType==String.class){
-                CLRequestParam requestParam=(CLRequestParam)parameterType.getAnnotation(CLRequestParam.class);
-                if(params.containsKey(requestParam.value())){
-                    for(Map.Entry<String,String[]> param:params.entrySet()){
-                        String value=Arrays.toString(param.getValue()).replaceAll("\\[|\\]","")
-                                .replaceAll("\\s",",");
+            } else if (parameterType == String.class) {
+
+                //   方式一
+                // todo : 为什么获取不到值？ https://www.cnblogs.com/wangshen31/p/9498731.html
+                /*CLRequestParam requestParam = (CLRequestParam) parameterType.getAnnotation(CLRequestParam.class);
+                if (params.containsKey(requestParam.value())) {
+                    for (Map.Entry<String, String[]> param : params.entrySet()) {
+                        String value = Arrays.toString(param.getValue())
+                                .replaceAll("\\[|\\]", "")
+                                .replaceAll("\\s", ",");
+                        paramVales[i] = value;
+                    }
+                }*/
+
+
+                //   方式二
+                //根据参数名称，做某些处理
+               String requestParam = parameterTypes[i].getSimpleName();
+                if(requestParam.equals("String")){
+                    for (Map.Entry<String, String[]> param : params.entrySet()) {
+                        // \\s ----> 空白符号
+                        // \\[|\\] -----> 匹配\ ?
+                        String value =Arrays.toString(param.getValue()).replaceAll("\\[|\\]", "").replaceAll(",\\s", ",");
                         paramVales[i]=value;
+                    }
+                }
+            }
+        }
+
+        // 通过投机取巧的方法
+        // 反射拿到method 所在的class ，拿到class  class 名称
+        // 调用tolowerFirshCase 获得beanname
+        String beanName = toLowerFirstCase(method.getDeclaringClass().getSimpleName());
+        method.invoke(ioc.get(beanName), paramVales);
+
+
+    }
+
+
+    private void doDispatch_back(HttpServletRequest req, HttpServletResponse resp) throws IOException, InvocationTargetException, IllegalAccessException {
+        // 绝对路径
+        String url = req.getRequestURI();
+        // 处理成相对路径
+        String contextPath = req.getContextPath();
+        url = url.replaceAll(contextPath, "").replaceAll("/+", "/");  // todo :修改错误
+        if (!this.handlerMapping.containsKey(url)) {  // todo :修改错误
+            resp.getWriter().write("404 not found!!!");
+            return;
+        }
+
+
+        Method method = this.handlerMapping.get(url);
+        System.out.println("获得对应的方法" + url);
+
+        // 从 request 中拿到 url 传过来的参数
+        Map<String, String[]> params = req.getParameterMap();
+        // 获取方法的形参列表
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object[] paramVales = new Object[parameterTypes.length];
+
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class parameterType = parameterTypes[i];
+            if (parameterType == HttpServletRequest.class) {
+                paramVales[i] = req;
+                continue;
+            } else if (parameterType == HttpServletResponse.class) {
+                paramVales[i] = resp;
+                continue;
+            } else if (parameterType == String.class) {
+                // todo : 为什么获取不到值？
+                CLRequestParam requestParam = (CLRequestParam) parameterType.getAnnotation(CLRequestParam.class);
+                if (params.containsKey(requestParam.value())) {
+                    for (Map.Entry<String, String[]> param : params.entrySet()) {
+                        String value = Arrays.toString(param.getValue())
+                                .replaceAll("\\[|\\]", "")
+                                .replaceAll("\\s", ",");
+                        paramVales[i] = value;
 
                     }
 
@@ -101,10 +170,8 @@ public class CLDispatcherServlet extends HttpServlet {
         // 通过投机取巧的方法
         // 反射拿到method 所在的class ，拿到class  class 名称
         // 调用tolowerFirshCase 获得beanname
-        String beanName=toLowerFirstCase(method.getDeclaringClass().getSimpleName());
-        method.invoke(ioc.get(beanName),paramVales);
-
-
+        String beanName = toLowerFirstCase(method.getDeclaringClass().getSimpleName());
+        method.invoke(ioc.get(beanName), paramVales);
 
 
     }
@@ -125,6 +192,7 @@ public class CLDispatcherServlet extends HttpServlet {
         initHandlerMapping();
         //   初始化完成，-----> 进入运行阶段
         System.out.println("------------->>>>> CL Spring framework is init. <<<<<--------------- ");
+        System.out.println("------------->>>>>  <<<<<--------------- ");
 
 
     }
@@ -150,14 +218,14 @@ public class CLDispatcherServlet extends HttpServlet {
             }
 
             // 默认获取所有的public 方法
-            for(Method method:clazz.getMethods()){
-                if(!method.isAnnotationPresent(CLRequestMapping.class)){
-                        continue;
+            for (Method method : clazz.getMethods()) {
+                if (!method.isAnnotationPresent(CLRequestMapping.class)) {
+                    continue;
                 }
-                CLRequestMapping requestMapping=method.getAnnotation(CLRequestMapping.class);
-                String url=("/"+baseUrl+"/"+requestMapping.value()).replaceAll("/+","/");
-                handlerMapping.put(url,method);
-                System.out.println("Mapper :"+url+",method="+method);
+                CLRequestMapping requestMapping = method.getAnnotation(CLRequestMapping.class);
+                String url = ("/" + baseUrl + "/" + requestMapping.value()).replaceAll("/+", "/");
+                handlerMapping.put(url, method);
+                System.out.println("Mapper :" + url + ",method=" + method);
 
             }
 
@@ -184,17 +252,20 @@ public class CLDispatcherServlet extends HttpServlet {
                 String beanName = autowired.value().trim();
                 if ("".equals(beanName)) {
                     // 获得接口的类型，作为key 待会去拿这个key 去ioc 去取值
-                    beanName = field.getType().getName();
+//                    beanName = field.getType().getName(); // todo :tom
+                    //  beanName = toLowerFirstCase(field.getType().getSimpleName());// todo :修改
+                    beanName = field.getName(); // todo :me   调试  --->修改tom 老师的错误
+
                 }
                 // 如果是public 以外的修饰符，只要加了@Autowired 注解，都要强制赋值
                 // 反射中叫暴力访问
                 field.setAccessible(true);
-
-
                 try {
                     field.set(entry.getValue(), ioc.get(beanName));
+                    System.out.println(entry.getValue() + " is autowired ,object is " + ioc.get(beanName));
                 } catch (Exception e) {
                     e.printStackTrace();
+                    continue;
                 }
 
             }
@@ -238,7 +309,8 @@ public class CLDispatcherServlet extends HttpServlet {
 
                         }
                         // 把接口的类型直接当成key
-                        ioc.put(i.getName(), instance);
+                        ioc.put(i.getName(), instance); // todo :  tom
+//                        ioc.put(i.getSimpleName(), instance);// todo 1:  修改
 
                     }
 
