@@ -33,7 +33,7 @@ public class LoginController {
                       @CLRequestParam String name) {
         System.out.println("进入了 login/in3 方法中 :"+name);
         try {
-            response.getWriter().write("成功了   this is in3. name is "+name);
+            response.getWriter().write("SUCCESS   this is in3. name is "+name);
         } catch (IOException e) {
             e.printStackTrace();
         }

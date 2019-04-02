@@ -17,7 +17,7 @@ import java.net.URL;
 import java.util.*;
 
 public class CLDispatcherServlet extends HttpServlet {
-    // 保存application.properties 配置文件中的内容
+    // 保存 application.properties 配置文件中的内容
     private Properties contextConfig = new Properties();
     // 保存扫描到的所有的类名
     private List<String> classNames = new ArrayList<String>();
@@ -104,7 +104,9 @@ public class CLDispatcherServlet extends HttpServlet {
                     for (Map.Entry<String, String[]> param : params.entrySet()) {
                         // \\s ----> 空白符号
                         // \\[|\\] -----> 匹配\ ?
-                        String value =Arrays.toString(param.getValue()).replaceAll("\\[|\\]", "").replaceAll(",\\s", ",");
+                        String value =Arrays.toString(param.getValue()).
+                                replaceAll("\\[|\\]", "").
+                                replaceAll(",\\s", ",");
                         paramVales[i]=value;
                     }
                 }
