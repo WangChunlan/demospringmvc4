@@ -28,9 +28,10 @@ public class LoginController {
 
     }*/
 
+ // 注意此处 如果使用CLRequestParam  必须得赋值
     @CLRequestMapping("/in3")
     public void in3(HttpServletRequest request, HttpServletResponse response,
-                      @CLRequestParam String name) {
+                      @CLRequestParam("name") String name) {
         System.out.println("进入了 login/in3 方法中 :"+name);
         try {
             response.getWriter().write("SUCCESS   this is in3. name is "+name);
@@ -39,4 +40,21 @@ public class LoginController {
         }
 
     }
+
+    // v3
+
+    @CLRequestMapping("/quuery.*")
+    public void query(HttpServletResponse response,HttpServletRequest request,@CLRequestParam("name") String name){
+        String result="My name is "+name;
+        try {
+            response.getWriter().write(result);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
 }

@@ -7,7 +7,7 @@
     <display-name>Archetype Created Web Application</display-name>
     <servlet>
         <servlet-name>spring</servlet-name>
-        <servlet-class>com.mymvcframework.v2.servlet.CLDispatcherServlet</servlet-class>
+        <servlet-class>com.mymvcframework.v3.servlet.CLDispatcherServlet</servlet-class>
         <init-param>
             <param-name>contextConfigLocation</param-name>
             <param-value>application.properties</param-value>
