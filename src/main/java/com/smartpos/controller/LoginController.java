@@ -53,6 +53,20 @@ public class LoginController {
         }
     }
 
+@CLRequestMapping("/add")
+    public void add(HttpServletRequest request,HttpServletResponse response,@CLRequestParam("a")Integer a,
+                    @CLRequestParam("b")Integer b){
+    try {
+        response.getWriter().write(a+"+"+b+"="+(a+b));
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+@CLRequestMapping("/remove")
+public String remove(@CLRequestParam("id")Integer id){
+    return ""+id;
+}
 
 
 
